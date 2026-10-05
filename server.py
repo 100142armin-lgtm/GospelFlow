@@ -17,6 +17,15 @@ import re
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
+# 确保工作目录始终为当前脚本所在目录
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# 兼容 pythonw 无窗口静默运行 (防止 print 报错退出)
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, 'w', encoding='utf-8')
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, 'w', encoding='utf-8')
+
 PORT = 3000
 OLLAMA_BASE_URL = "http://127.0.0.1:11434"
 
@@ -295,20 +304,19 @@ def run():
     web_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(web_dir)
     server_address = ('0.0.0.0', PORT)
-    httpd = HTTPServer(server_address, GospelFlowHandler)
 
     local_ip = get_local_ip()
     local_url = f"http://localhost:{PORT}"
-    lan_url = f"http://{local_ip}:{PORT}"
 
-    print("=" * 66)
-    print("🚀 GospelFlow 短视频爆款文案工作台 (出海非洲葡语基督徒版) 已就绪！")
-    print("=" * 66)
-    print(f"💻 本机直接访问地址:   {local_url}")
-    print(f"👥 团队局域网共享地址: {lan_url}  (同WiFi同事输入即可使用你的5060算力)")
-    print("-" * 66)
-    print("💡 提示：按 Ctrl + C 可关闭服务。正在自动为您打开浏览器...")
-    print("=" * 66)
+    # 尝试绑定端口；若端口已被占用（说明已有后台实例），直接打开浏览器即可，不报错退出
+    try:
+        httpd = HTTPServer(server_address, GospelFlowHandler)
+    except OSError:
+        try:
+            webbrowser.open(local_url)
+        except Exception:
+            pass
+        sys.exit(0)
 
     try:
         webbrowser.open(local_url)
@@ -318,8 +326,14 @@ def run():
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n🛑 GospelFlow 服务已停止。")
         sys.exit(0)
 
 if __name__ == '__main__':
-    run()
+    try:
+        run()
+    except Exception as e:
+        import traceback
+        err_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'server_error.log')
+        with open(err_path, 'w', encoding='utf-8') as f:
+            traceback.print_exc(file=f)
+
