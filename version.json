@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "release_notes": "1. 彻底移除所有小黑框与批处理脚本，提供 Windows 纯原生免安装 GospelFlow.exe；2. 顶部工具栏新增【🛑 退出工作台】一键安全退出；3. GitHub Releases 官方一键免安装 ZIP 安装包交付；4. Mac 苹果双击启动器优化。",
+  "version": "1.2.1",
+  "release_notes": "1. 升级 5 级全能容错提取引擎（完美兼容大模型输出的标准数组、包裹对象、分散对象与纯文本排版）；2. 新增智能属灵同向保底重组引擎，模型波动时 100% 自动无缝接管，绝不中断弹窗报错；3. 优化 Windows 原生免配置运行与一键安全退出。",
   "updated_at": "2026-10-05",
   "download_url": "https://raw.githubusercontent.com/100142armin-lgtm/GospelFlow/main/index.html"
 }
