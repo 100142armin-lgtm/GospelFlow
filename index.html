@@ -57,12 +57,7 @@
         <!-- 一键在线热更新按钮 -->
         <button id="updateCheckBtn" onclick="manualCheckUpdate()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition" title="检查 GitHub 官方在线更新">
           <i id="updateIcon" class="fa-solid fa-cloud-arrow-down text-slate-400"></i>
-          <span id="updateBtnText">v1.3.0</span>
-        </button>
-
-        <button onclick="createDesktopShortcut()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-700/60 rounded-lg text-xs font-semibold transition" title="在电脑桌面和开始菜单生成一键启动图标">
-          <i class="fa-solid fa-desktop text-indigo-400"></i>
-          <span>🖥️ 发送到桌面</span>
+          <span id="updateBtnText">v1.3.1</span>
         </button>
 
         <button onclick="openModal('settingsModal')" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition" title="引擎与参数设置">
@@ -1001,7 +996,7 @@
       return results;
     }
 
-    function showToast    function showToast(msg, isSuccess = true) {
+    function showToast(msg, isSuccess = true) {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toastMsg');
       const toastIcon = document.getElementById('toastIcon');
@@ -1778,19 +1773,6 @@ ${JSON.stringify(candidateScripts, null, 2)}
       showToast('设置已保存！');
     }
 
-    async function createDesktopShortcut() {
-      try {
-        const res = await fetch('/api/shortcut/create');
-        const data = await res.json();
-        if (res.ok && data.status === 'success') {
-          showToast('🎉 成功在【电脑桌面】和【开始菜单】创建快捷方式！');
-        } else {
-          showToast('创建桌面图标失败: ' + (data.message || '未知异常'), false);
-        }
-      } catch (err) {
-        showToast('快捷方式创建异常: ' + err.message, false);
-      }
-    }
 
     async function shutdownServer() {
       if (!confirm('确定要退出并彻底关闭 GospelFlow 后台服务吗？\n\n退出后再次使用请点击启动快捷方式。')) return;
