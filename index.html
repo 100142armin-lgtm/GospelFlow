@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GospelFlow - 基督教短视频爆款文案智能重组工作台 (双表格版)</title>
+  <title>GospelFlow - 短视频爆款文案智能重组工作台 (双表格版)</title>
+  <link rel="icon" type="image/x-icon" href="icon.ico">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -25,15 +26,37 @@
   <header class="glass-nav border-b border-slate-700/60 sticky top-0 z-40 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-          <i class="fa-solid fa-cross text-white text-lg"></i>
+        <!-- Option B: 模块矩阵智能拼图 Logo -->
+        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center p-1 shadow-lg shadow-indigo-500/10">
+          <svg class="w-full h-full" viewBox="0 0 120 120" fill="none">
+            <defs>
+              <linearGradient id="hdrGradB1" x1="20" y1="20" x2="100" y2="40" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#6366f1" />
+                <stop offset="100%" stop-color="#818cf8" />
+              </linearGradient>
+              <linearGradient id="hdrGradB2" x1="20" y1="50" x2="100" y2="70" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#06b6d4" />
+                <stop offset="100%" stop-color="#3b82f6" />
+              </linearGradient>
+              <linearGradient id="hdrGradB3" x1="20" y1="80" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#10b981" />
+                <stop offset="100%" stop-color="#34d399" />
+              </linearGradient>
+            </defs>
+            <rect x="20" y="24" width="56" height="18" rx="9" fill="url(#hdrGradB1)" />
+            <circle cx="88" cy="33" r="9" fill="#f59e0b" />
+            <rect x="44" y="51" width="56" height="18" rx="9" fill="url(#hdrGradB2)" />
+            <circle cx="29" cy="60" r="9" fill="#8b5cf6" />
+            <rect x="20" y="78" width="80" height="18" rx="9" fill="url(#hdrGradB3)" />
+            <path d="M44 33V78" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="3 3" opacity="0.75" />
+          </svg>
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-amber-200 via-white to-indigo-200 bg-clip-text text-transparent">GospelFlow</span>
+            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">GospelFlow</span>
             <span class="text-xs bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 px-2 py-0.5 rounded-full font-medium">智能双表格重组版</span>
           </div>
-          <p class="text-xs text-slate-400">非洲葡语基督教短视频 · 语义智能匹配重组 · 零网络限制</p>
+          <p class="text-xs text-slate-400">短视频爆款文案智能切片重组 · 双表格数据协同 · 零网络限制</p>
         </div>
       </div>
 
@@ -57,7 +80,7 @@
         <!-- 一键在线热更新按钮 -->
         <button id="updateCheckBtn" onclick="manualCheckUpdate()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition" title="检查 GitHub 官方在线更新">
           <i id="updateIcon" class="fa-solid fa-cloud-arrow-down text-slate-400"></i>
-          <span id="updateBtnText">v1.3.1</span>
+          <span id="updateBtnText">v1.3.2</span>
         </button>
 
         <button onclick="openModal('settingsModal')" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition" title="引擎与参数设置">
