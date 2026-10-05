@@ -17,8 +17,12 @@ import re
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
-# 确保工作目录始终为当前脚本所在目录
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# 确保无论是源码运行还是 PyInstaller 打包为 exe，工作目录均指向程序所在真实目录
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
 
 # 兼容 pythonw 无窗口静默运行 (防止 print 报错退出)
 if sys.stdout is None:
@@ -152,6 +156,20 @@ class GospelFlowHandler(SimpleHTTPRequestHandler):
                 self.wfile.write(err_payload)
             return
 
+        # 2.9 安全退出后台服务
+        if self.path.startswith('/api/shutdown'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(json.dumps({'status': 'success', 'message': 'GospelFlow 服务正在退出...'}, ensure_ascii=False).encode('utf-8'))
+            def kill_soon():
+                import time
+                time.sleep(0.5)
+                os._exit(0)
+            import threading
+            threading.Thread(target=kill_soon).start()
+            return
+
         # 3. 在线一键更新与代码热替换
         if self.path == '/api/update/apply':
             try:
@@ -194,6 +212,20 @@ class GospelFlowHandler(SimpleHTTPRequestHandler):
         super().do_POST()
 
     def do_GET(self):
+        # 0.0 安全退出后台服务
+        if self.path.startswith('/api/shutdown'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(json.dumps({'status': 'success', 'message': 'GospelFlow 服务正在退出...'}, ensure_ascii=False).encode('utf-8'))
+            def kill_soon():
+                import time
+                time.sleep(0.5)
+                os._exit(0)
+            import threading
+            threading.Thread(target=kill_soon).start()
+            return
+
         # 0. 获取本机信息与局域网共享 IP
         if self.path == '/api/info':
             self.send_response(200)
@@ -301,8 +333,7 @@ class GospelFlowHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
 def run():
-    web_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(web_dir)
+    os.chdir(BASE_DIR)
     server_address = ('0.0.0.0', PORT)
 
     local_ip = get_local_ip()
