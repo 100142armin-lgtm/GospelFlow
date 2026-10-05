@@ -226,6 +226,50 @@ class GospelFlowHandler(SimpleHTTPRequestHandler):
             threading.Thread(target=kill_soon).start()
             return
 
+        # 0.05 一键创建桌面与开始菜单快捷方式
+        if self.path.startswith('/api/shortcut/create'):
+            try:
+                import subprocess
+                vbs_code = f'''Set ws = CreateObject("WScript.Shell")
+desktop = ws.SpecialFolders("Desktop")
+programs = ws.SpecialFolders("Programs")
+target = "{BASE_DIR}\\\\GospelFlow.exe"
+If Not CreateObject("Scripting.FileSystemObject").FileExists(target) Then
+    target = "{BASE_DIR}\\\\启动GospelFlow.vbs"
+End If
+
+Set s1 = ws.CreateShortcut(desktop & "\\\\GospelFlow 工作台.lnk")
+s1.TargetPath = target
+s1.WorkingDirectory = "{BASE_DIR}"
+s1.Description = "GospelFlow 基督教短视频爆款文案智能重组工作台"
+s1.Save
+
+Set s2 = ws.CreateShortcut(programs & "\\\\GospelFlow 工作台.lnk")
+s2.TargetPath = target
+s2.WorkingDirectory = "{BASE_DIR}"
+s2.Description = "GospelFlow 基督教短视频爆款文案智能重组工作台"
+s2.Save
+'''
+                tmp_vbs = os.path.join(BASE_DIR, '_tmp_sc.vbs')
+                with open(tmp_vbs, 'w', encoding='utf-16') as vf:
+                    vf.write(vbs_code)
+                subprocess.run(['wscript', tmp_vbs], timeout=5)
+                try:
+                    os.remove(tmp_vbs)
+                except Exception:
+                    pass
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'success', 'message': '已成功在桌面与开始菜单创建快捷方式！'}, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'error', 'message': str(e)}, ensure_ascii=False).encode('utf-8'))
+            return
+
         # 0. 获取本机信息与局域网共享 IP
         if self.path == '/api/info':
             self.send_response(200)
