@@ -1,6 +1,6 @@
 {
-  "version": "1.3.2",
-  "release_notes": "1. 全新升级极简功能型品牌视觉（去信仰化），采用【模块矩阵 · 智能拼图】官方标志；2. 网页顶部导航栏与 Favicon 同步装配高清矢量徽标；3. GospelFlow.exe 内置专属多尺寸高清 Windows 应用程序图标，发送到桌面快捷方式和固定任务栏展示更加现代高级。",
+  "version": "1.3.3",
+  "release_notes": "1. 移除顶部导航栏【退出工作台】按钮，日常使用无需多余操作，直接关闭网页标签即可；2. 重构原始表格 TSV 解析引擎为全局矩阵列映射算法，完美适应 Google 表格整表或多列复制，彻底解决单元格错乱、跨列混杂问题；3. 提升数据导入一致性与体验。",
   "updated_at": "2026-10-05",
   "download_url": "https://raw.githubusercontent.com/100142armin-lgtm/GospelFlow/main/index.html"
 }

@@ -80,17 +80,12 @@
         <!-- 一键在线热更新按钮 -->
         <button id="updateCheckBtn" onclick="manualCheckUpdate()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition" title="检查 GitHub 官方在线更新">
           <i id="updateIcon" class="fa-solid fa-cloud-arrow-down text-slate-400"></i>
-          <span id="updateBtnText">v1.3.2</span>
+          <span id="updateBtnText">v1.3.3</span>
         </button>
 
         <button onclick="openModal('settingsModal')" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition" title="引擎与参数设置">
           <i class="fa-solid fa-gear text-slate-400"></i>
           <span>⚙️ 设置</span>
-        </button>
-
-        <button onclick="shutdownServer()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-lg text-xs font-semibold transition" title="安全退出 GospelFlow 后台服务">
-          <i class="fa-solid fa-power-off text-rose-400"></i>
-          <span>🛑 退出工作台</span>
         </button>
       </div>
     </div>
@@ -1197,75 +1192,157 @@
     }
 
     // 核心引擎 2：智能语言与内容列自动探测识别器 (无视复制范围与顺序，100% 确保中文进 B 列、葡语进 C 列、播放量进 D 列)
-    function extractRowFields(parts) {
-      // 过滤表头行
-      const isHeader = parts.some(p => p === '中文' || p === '葡语' || p === '播放量' || p.includes('爆贴文案'));
-      if (isHeader) return null;
-
-      let chinese = '';
-      let portuguese = '';
-      let views = '';
-      let note = '';
-
-      parts.forEach((cell) => {
-        const val = cell.trim();
-        if (!val) return;
-
-        // 1. 日期判断 (如 2026-10-02)
-        if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/.test(val) && val.length <= 15) {
-          if (!note) note = val;
-          return;
-        }
-
-        // 2. 播放量判断 (如 40W, 25w, 13W, 5.6w+5.7w, tk 10.8 w, tiktok 8.7w, 114w 等)
-        if (/^(tk|tiktok)?\s*\d+(\.\d+)?\s*[wWkK万千]?(\+\d+(\.\d+)?[wWkK万千]?)?$/i.test(val) || (/^[0-9.]+\s*[wWkK万千]/i.test(val) && val.length < 20)) {
-          if (!views) views = val;
-          return;
-        }
-
-        // 3. 中文识别 (检测汉字字符数量)
-        const chineseChars = (val.match(/[\u4e00-\u9fa5]/g) || []).length;
-        if (chineseChars >= 3) {
-          if (!chinese || chineseChars > (chinese.match(/[\u4e00-\u9fa5]/g) || []).length) {
-            if (chinese && !note) note = chinese;
-            chinese = val;
-          }
-          return;
-        }
-
-        // 4. 葡语识别 (检测纯拉丁字母/葡语特殊重音符，且不含汉字)
-        const latinChars = (val.match(/[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]/g) || []).length;
-        if (latinChars >= 8 && chineseChars === 0) {
-          if (!portuguese || latinChars > (portuguese.match(/[a-zA-Z]/g) || []).length) {
-            portuguese = val;
-          }
-          return;
-        }
-
-        // 其他简短信息存入备注
-        if (!note && val.length < 50) {
-          note = val;
-        }
-      });
-
-      // 只要具备中文或葡语任意一项，即为有效行；纯空行跳过
-      if (!chinese && !portuguese) return null;
-      return { chinese, portuguese, views, note };
-    }
-
-    // 整合入口：精准解析从 Google 表格复制的任意多列/单列数据
+    // 核心引擎 2：全局智能表格矩阵映射器 (按整表列特征统一绑定，100% 杜绝跨行错位)
     function processAndLoadRawTsvText(text) {
       if (!text || !text.trim()) return;
 
       const rawGrid = parseTSVQuoteAware(text.trim());
-      const parsedRows = [];
+      if (rawGrid.length === 0) {
+        showToast('未能读取到有效表格数据', false);
+        return;
+      }
 
-      rawGrid.forEach((parts) => {
-        if (!parts || parts.length === 0) return;
-        
-        const extracted = extractRowFields(parts);
-        if (extracted) {
-          parsedRows.push(extracted);
+      let headerRowIndex = -1;
+      let colMap = { chinese: -1, portuguese: -1, views: -1, note: -1, index: -1 };
+
+      // 1. 优先尝试表头识别
+      for (let r = 0; r < Math.min(3, rawGrid.length); r++) {
+        const row = rawGrid[r];
+        let matched = 0;
+        row.forEach((cell, idx) => {
+          const c = cell.toLowerCase().trim();
+          if (/^(序号|id|no\.?|行号|index|#)$/i.test(c)) {
+            colMap.index = idx; matched++;
+          } else if (c.includes('中文') || c.includes('chinese') || c.includes('zh') || c.includes('文案(中)') || c.includes('翻译')) {
+            colMap.chinese = idx; matched++;
+          } else if (c.includes('葡语') || c.includes('葡萄牙') || c.includes('portuguese') || c.includes('pt') || c.includes('原文') || c.includes('texto')) {
+            colMap.portuguese = idx; matched++;
+          } else if (c.includes('播放') || c.includes('views') || c.includes('view') || c.includes('量')) {
+            colMap.views = idx; matched++;
+          } else if (c.includes('备注') || c.includes('主题') || c.includes('note') || c.includes('标签') || c.includes('链接') || c.includes('link') || c.includes('日期') || c.includes('date')) {
+            colMap.note = idx; matched++;
+          }
+        });
+        if (matched >= 2 || (matched >= 1 && row.some(cell => /序号|中文|葡语/i.test(cell)))) {
+          headerRowIndex = r;
+          break;
+        }
+      }
+
+      const dataRows = headerRowIndex !== -1 ? rawGrid.slice(headerRowIndex + 1) : rawGrid;
+      if (dataRows.length === 0) {
+        showToast('表格中暂无数据行', false);
+        return;
+      }
+
+      const maxCols = Math.max(...dataRows.map(r => r.length));
+
+      // 2. 如果表头未完全指定，整表统计列特征
+      if (colMap.chinese === -1 || colMap.portuguese === -1) {
+        const colStats = [];
+        for (let c = 0; c < maxCols; c++) {
+          let nonEmpties = 0;
+          let totalZh = 0;
+          let totalPt = 0;
+          let pureIntCount = 0;
+          let viewsPatternCount = 0;
+          let dateCount = 0;
+
+          dataRows.forEach(row => {
+            const val = (row[c] || '').trim();
+            if (!val) return;
+            nonEmpties++;
+            const zh = (val.match(/[\u4e00-\u9fa5]/g) || []).length;
+            const pt = (val.match(/[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]/g) || []).length;
+            totalZh += zh;
+            totalPt += pt;
+            
+            if (/^\d{1,5}$/.test(val)) pureIntCount++;
+            if (/^(tk|tiktok)?\s*\d+(\.\d+)?\s*[wWkK万千]/i.test(val) || /\d+\.?\d*\s*[wWkK万千]\s*\+\s*\d+/i.test(val)) {
+              viewsPatternCount++;
+            }
+            if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/.test(val)) dateCount++;
+          });
+
+          colStats.push({
+            colIndex: c,
+            nonEmpties,
+            totalZh,
+            totalPt,
+            isIndex: nonEmpties > 0 && (pureIntCount >= nonEmpties * 0.6) && viewsPatternCount === 0,
+            isViews: nonEmpties > 0 && (viewsPatternCount >= nonEmpties * 0.5),
+            isDate: nonEmpties > 0 && (dateCount >= nonEmpties * 0.5)
+          });
+        }
+
+        // 绑定已识别的专用列
+        colStats.forEach(stat => {
+          if (colMap.index === -1 && stat.isIndex) colMap.index = stat.colIndex;
+          if (colMap.views === -1 && stat.isViews) colMap.views = stat.colIndex;
+          if (colMap.note === -1 && stat.isDate) colMap.note = stat.colIndex;
+        });
+
+        // 过滤出文案候选列
+        const textCols = colStats.filter(s => s.colIndex !== colMap.index && s.colIndex !== colMap.views && s.colIndex !== colMap.note);
+
+        if (textCols.length === 1) {
+          const only = textCols[0];
+          if (only.totalPt >= only.totalZh) {
+            if (colMap.portuguese === -1) colMap.portuguese = only.colIndex;
+          } else {
+            if (colMap.chinese === -1) colMap.chinese = only.colIndex;
+          }
+        } else if (textCols.length >= 2) {
+          const sortedByPt = [...textCols].sort((a, b) => (b.totalPt - b.totalZh) - (a.totalPt - a.totalZh));
+          const sortedByZh = [...textCols].sort((a, b) => (b.totalZh - b.totalPt) - (a.totalZh - a.totalPt));
+
+          if (colMap.portuguese === -1 && sortedByPt[0].totalPt > 0) {
+            colMap.portuguese = sortedByPt[0].colIndex;
+          }
+
+          if (colMap.chinese === -1) {
+            const bestZh = sortedByZh.find(s => s.colIndex !== colMap.portuguese && s.totalZh > s.totalPt);
+            if (bestZh) {
+              colMap.chinese = bestZh.colIndex;
+            } else {
+              const remain = textCols.find(s => s.colIndex !== colMap.portuguese);
+              if (remain) colMap.chinese = remain.colIndex;
+            }
+          }
+        }
+      }
+
+      // 默认兜底映射（如果列未识别）
+      if (colMap.chinese === -1 && colMap.portuguese === -1) {
+        if (maxCols >= 2) {
+          if (colMap.index === 0) {
+            colMap.chinese = 1;
+            colMap.portuguese = 2;
+            if (maxCols >= 4 && colMap.views === -1) colMap.views = 3;
+          } else {
+            colMap.chinese = 0;
+            colMap.portuguese = 1;
+            if (maxCols >= 3 && colMap.views === -1) colMap.views = 2;
+          }
+        }
+      }
+
+      // 3. 严格按照统一的全局列映射提取每一行，确保每个单元格严丝合缝对齐
+      const parsedRows = [];
+      dataRows.forEach((row) => {
+        const zh = colMap.chinese !== -1 ? (row[colMap.chinese] || '').trim() : '';
+        const pt = colMap.portuguese !== -1 ? (row[colMap.portuguese] || '').trim() : '';
+        const vw = colMap.views !== -1 ? (row[colMap.views] || '').trim() : '';
+        let nt = colMap.note !== -1 ? (row[colMap.note] || '').trim() : '';
+
+        if (!nt && row.length > 3) {
+          const extra = row.filter((c, i) => i !== colMap.index && i !== colMap.chinese && i !== colMap.portuguese && i !== colMap.views && c.trim().length > 0);
+          if (extra.length > 0) nt = extra.join(' - ');
+        }
+
+        // 只要中文或葡语有内容即为有效行
+        if (zh || pt) {
+          parsedRows.push({ chinese: zh, portuguese: pt, views: vw, note: nt });
         }
       });
 
@@ -1274,11 +1351,9 @@
         return;
       }
 
-      // 总是将最新粘贴的数据直接载入表格（替换之前的旧数据或样例数据）
       rawScriptsData = parsedRows;
-
       renderRawTable();
-      showToast(`🎉 成功导入 ${parsedRows.length} 条爆款文案！中文、葡语、播放量已精准归位！`);
+      showToast(`🎉 成功导入 ${parsedRows.length} 条爆款文案！各列单元格已精准严密对齐！`);
     }
 
     // 加载经典基督教短视频爆款示例
