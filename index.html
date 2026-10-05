@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GospelFlow - 基督教短视频爆款文案智能重组工作台 (双表格版)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); }
+    .card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03); }
+    .scroll-custom::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scroll-custom::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+    .scroll-custom::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+    .scroll-custom::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .grid-cell:focus { outline: 2px solid #6366f1; background-color: #fff !important; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- 顶部导航栏 -->
+  <header class="glass-nav border-b border-slate-700/60 sticky top-0 z-40 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-cross text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-amber-200 via-white to-indigo-200 bg-clip-text text-transparent">GospelFlow</span>
+            <span class="text-xs bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 px-2 py-0.5 rounded-full font-medium">智能双表格重组版</span>
+          </div>
+          <p class="text-xs text-slate-400">非洲葡语基督教短视频 · 语义智能匹配重组 · 零网络限制</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <!-- 本地 GPU 模型探针状态 -->
+        <div id="engineStatusBadge" class="flex items-center space-x-2 bg-slate-800/90 border border-slate-700 px-3 py-1.5 rounded-lg text-xs">
+          <span id="engineStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+          <span id="engineStatusText" class="text-slate-300 font-medium">Meta Llama 3.1:8b (本地RTX 5060 ~3s)</span>
+        </div>
+        
+        <button onclick="openGuideWithTab('workflow')" class="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-semibold transition">
+          <i class="fa-solid fa-book-open"></i>
+          <span>📘 极速使用教程</span>
+        </button>
+
+        <button onclick="openGuideWithTab('team')" class="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 rounded-lg text-xs font-semibold transition" title="团队成员安装模型 (Win / Mac)">
+          <i class="fa-solid fa-laptop-code text-indigo-300"></i>
+          <span>💻 团队模型安装 (Win/Mac)</span>
+        </button>
+
+        <!-- 一键在线热更新按钮 -->
+        <button id="updateCheckBtn" onclick="manualCheckUpdate()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition" title="检查 GitHub 官方在线更新">
+          <i id="updateIcon" class="fa-solid fa-cloud-arrow-down text-slate-400"></i>
+          <span id="updateBtnText">v1.1.0</span>
+        </button>
+
+        <button onclick="openModal('settingsModal')" class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition" title="引擎与参数设置">
+          <i class="fa-solid fa-gear text-slate-400"></i>
+          <span>⚙️ 设置</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主工作区 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- ========================================================================= -->
+    <!-- 板块一：原始爆贴工作表 (类似 Google 表格的内嵌网格) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden flex flex-col">
+      <!-- 头部操作条 -->
+      <div class="p-4 border-b border-slate-200 bg-slate-50/80 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-table-list"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 flex items-center">
+              <span>原始爆贴工作表 (输入区)</span>
+              <span id="rawCountBadge" class="ml-2 text-xs bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">0 条文案</span>
+            </h2>
+            <p class="text-[11px] text-slate-500">在 Google 表格中按 <kbd class="px-1 py-0.2 bg-white border border-slate-300 rounded font-mono text-[10px]">Ctrl+A</kbd> 全选复制后，直接在下方点击按钮或按 <kbd class="px-1 py-0.2 bg-white border border-slate-300 rounded font-mono text-[10px]">Ctrl+V</kbd> 即可批量导入</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- 核心：一键从剪贴板粘贴表格 -->
+          <button onclick="pasteFromClipboardToRawTable()" class="flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition active:scale-95" title="直接读取剪贴板的表格内容">
+            <i class="fa-regular fa-paste"></i>
+            <span>📋 一键粘贴表格数据 (Ctrl+V)</span>
+          </button>
+
+          <!-- 增行 -->
+          <button onclick="addEmptyRawRow()" class="flex items-center space-x-1 px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-medium rounded-xl transition">
+            <i class="fa-solid fa-plus text-slate-400"></i>
+            <span>添加一行</span>
+          </button>
+
+          <!-- 加载经典爆款样例 -->
+          <button onclick="loadSampleRawData()" class="flex items-center space-x-1 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-medium rounded-xl transition">
+            <i class="fa-solid fa-lightbulb text-amber-500"></i>
+            <span>载入精选样例</span>
+          </button>
+
+          <!-- 清空 -->
+          <button onclick="clearRawTable()" class="px-2.5 py-2 text-slate-400 hover:text-rose-500 text-xs transition" title="清空原始表格">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 表格区域 (Spreadsheet Grid) -->
+      <div id="rawTableContainer" class="overflow-x-auto max-h-[380px] overflow-y-auto scroll-custom">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="bg-slate-100 text-slate-600 font-semibold sticky top-0 z-10 border-b border-slate-200 select-none">
+            <tr>
+              <th class="p-2.5 w-14 text-center border-r border-slate-200 bg-slate-100">序号</th>
+              <th class="p-2.5 w-[38%] border-r border-slate-200 bg-slate-100">中文文案 (B列 · 核心拆解)</th>
+              <th class="p-2.5 w-[34%] border-r border-slate-200 bg-slate-100">葡语文案 (C列 · 对照参考)</th>
+              <th class="p-2.5 w-24 text-center border-r border-slate-200 bg-slate-100">播放量 (D列)</th>
+              <th class="p-2.5 w-28 border-r border-slate-200 bg-slate-100">备注 / 主题</th>
+              <th class="p-2.5 w-14 text-center bg-slate-100">操作</th>
+            </tr>
+          </thead>
+          <tbody id="rawTableBody" class="divide-y divide-slate-200 bg-white font-mono">
+            <!-- 初始空状态 -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 底部统计与快捷粘贴提示 -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-circle-info text-indigo-500"></i>
+          <span>点击任意单元格即可直接双击编辑。支持直接按 <kbd class="px-1 py-0.5 bg-white border border-slate-200 rounded font-mono">Ctrl+V</kbd> 自动追加或填充数据。</span>
+        </div>
+        <div id="rawTableStats" class="text-slate-600 font-medium">就绪: 0 条</div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- 控制中枢：AI 智能重组操作工具栏 (精巧高级 · 扁平紧凑 · 告别臃肿占地) -->
+    <!-- ========================================================================= -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-xl border border-indigo-500/30 card-shadow p-3.5 text-white flex flex-wrap items-center justify-between gap-3 transition-all">
+      <!-- 左侧：功能标识与状态 (紧凑不占地，防止换行挤压) -->
+      <div class="flex items-center space-x-2.5 min-w-[240px]">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-400 to-indigo-500 flex items-center justify-center text-indigo-950 text-sm font-bold shadow-md shadow-amber-500/20 shrink-0">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm font-bold text-white tracking-tight">AI 智能同频重组</span>
+            <span class="px-2 py-0.5 bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 rounded-full text-[10px] font-semibold">属灵语义匹配</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">黄金启语与见证主体同向嫁接 · 严禁乱拼乱配</p>
+        </div>
+      </div>
+
+      <!-- 右侧：紧凑控制参数与触发按钮 (单行横向对齐) -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- 篇数选择 -->
+        <div class="flex items-center space-x-1.5 bg-slate-800/90 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs">
+          <span class="text-slate-400 font-medium whitespace-nowrap">篇数:</span>
+          <select id="recombineCountSelect" class="bg-transparent font-bold text-amber-300 focus:outline-none cursor-pointer text-xs">
+            <option value="3" class="bg-slate-800 text-white">3 篇</option>
+            <option value="5" selected class="bg-slate-800 text-white">5 篇 (推荐)</option>
+            <option value="8" class="bg-slate-800 text-white">8 篇</option>
+            <option value="12" class="bg-slate-800 text-white">12 篇全矩阵</option>
+            <option value="15" class="bg-slate-800 text-white">15 篇全矩阵</option>
+            <option value="20" class="bg-slate-800 text-white">20 篇超级库</option>
+          </select>
+        </div>
+
+        <!-- 智能日期监测与自动排期推演 -->
+        <div class="flex items-center space-x-1.5 bg-slate-800/90 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs">
+          <label class="flex items-center space-x-1 cursor-pointer text-slate-300 font-medium">
+            <input type="checkbox" id="autoDateShiftCheck" checked class="w-3.5 h-3.5 rounded text-amber-400 focus:ring-amber-400 accent-amber-500" onchange="updateDateControlsState()">
+            <span class="whitespace-nowrap text-amber-300">📅 自动排期:</span>
+          </label>
+          <select id="dateShiftDaysSelect" class="bg-transparent font-bold text-white focus:outline-none cursor-pointer text-xs" onchange="updateTargetDatePreview()">
+            <option value="3" selected class="bg-slate-800 text-white">延后 3 天 (例: 10月8日)</option>
+            <option value="2" class="bg-slate-800 text-white">延后 2 天</option>
+            <option value="1" class="bg-slate-800 text-white">延后 1 天 (明天)</option>
+            <option value="4" class="bg-slate-800 text-white">延后 4 天</option>
+            <option value="5" class="bg-slate-800 text-white">延后 5 天</option>
+          </select>
+          <span id="targetDatePreviewBadge" class="hidden lg:inline-block px-1.5 py-0.5 bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded font-semibold text-[10px] whitespace-nowrap"></span>
+        </div>
+
+        <!-- 触发主按钮 (高对比度金黄质感按钮) -->
+        <button id="startRecombineBtn" onclick="startSmartRecombination()" class="px-5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-indigo-950 font-bold text-xs rounded-xl shadow-md shadow-amber-500/20 flex items-center space-x-1.5 transition active:scale-95 whitespace-nowrap cursor-pointer">
+          <i class="fa-solid fa-bolt-lightning text-sm"></i>
+          <span>开始智能重组新文案</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 实时推理进度指示器 (默认隐藏) -->
+    <div id="aiProgressBanner" class="hidden bg-white p-4 rounded-2xl border border-indigo-200 card-shadow space-y-2.5">
+      <div class="flex items-center justify-between text-xs">
+        <span class="font-bold text-indigo-900 flex items-center">
+          <i class="fa-solid fa-spinner fa-spin mr-2 text-indigo-600 text-sm"></i>
+          <span id="aiProgressText">正在使用本地 Meta Llama 3.1 深度理解文案主题...</span>
+        </span>
+        <span id="aiProgressPercent" class="font-bold text-indigo-600">30%</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+        <div id="aiProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-300" style="width: 30%"></div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- 板块三：重组成品工作表 (输出区 · 中葡对照 · 完美复制回 Google 表格) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden flex flex-col">
+      <!-- 头部操作条 -->
+      <div class="p-4 border-b border-slate-200 bg-slate-50/80 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 flex items-center">
+              <span>成品质检工作表 (输出区 · 中葡双语对照)</span>
+              <span id="resultCountBadge" class="ml-2 text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">0 篇成品</span>
+            </h2>
+            <p class="text-[11px] text-slate-500">点击下方按钮可直接一键复制整表，直接在 Google 表格中按 <kbd class="px-1 py-0.2 bg-white border border-slate-300 rounded font-mono text-[10px]">Ctrl+V</kbd> 即可带格式粘贴回【成品】表！</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- 核心：一键复制全部成品 (TSV格式) -->
+          <button onclick="copyAllResultsToGoogleSheetFormat()" class="flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-sm transition active:scale-95" title="以表格格式复制全部成品，可直接粘贴进 Google 表格">
+            <i class="fa-regular fa-copy"></i>
+            <span>📋 一键复制全部成品 (可直接粘贴进表格)</span>
+          </button>
+
+          <!-- 导出 Excel -->
+          <button onclick="exportResultsToExcel()" class="flex items-center space-x-1 px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-medium rounded-xl transition">
+            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+            <span>导出 Excel</span>
+          </button>
+
+          <!-- 清空 -->
+          <button onclick="clearResultsTable()" class="px-2.5 py-2 text-slate-400 hover:text-rose-500 text-xs transition" title="清空成品表格">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 成品表格区域 -->
+      <div id="resultsTableContainer" class="overflow-x-auto min-h-[220px] max-h-[480px] overflow-y-auto scroll-custom">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="bg-slate-100 text-slate-600 font-semibold sticky top-0 z-10 border-b border-slate-200 select-none">
+            <tr>
+              <th class="p-2.5 w-14 text-center border-r border-slate-200 bg-slate-100">序号</th>
+              <th class="p-2.5 w-[38%] border-r border-slate-200 bg-slate-100">中文重组新文案 (点击可编辑)</th>
+              <th class="p-2.5 w-[34%] border-r border-slate-200 bg-slate-100">非洲葡语口播成品 (安哥拉/莫桑比克)</th>
+              <th class="p-2.5 w-40 border-r border-slate-200 bg-slate-100">重组来源配方</th>
+              <th class="p-2.5 w-28 text-center bg-slate-100">快捷操作</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody" class="divide-y divide-slate-200 bg-white font-mono">
+            <!-- 初始空状态 -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 底部辅助说明 -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-check-double text-emerald-600"></i>
+          <span>已对每篇新文案进行非洲葡语圣经用语校准。点击单行右侧按钮可单独复制中文或葡语。</span>
+        </div>
+        <div id="resultsTableStats" class="text-slate-600 font-medium">0 篇生成</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 全局提示 Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-sm border border-slate-700 pointer-events-none">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">操作成功</span>
+  </div>
+
+  <!-- 模态框 1：教程与团队模型配置指南 -->
+  <div id="guideModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 card-shadow max-h-[88vh] flex flex-col">
+      <!-- 顶部切换标签 -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center space-x-2">
+          <button id="guideTabBtnWorkflow" onclick="switchGuideTab('workflow')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-indigo-600 text-white shadow-sm">
+            <i class="fa-solid fa-book-bookmark mr-1"></i> 📘 30秒极速工作流
+          </button>
+          <button id="guideTabBtnTeam" onclick="switchGuideTab('team')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <i class="fa-solid fa-users-gear mr-1 text-indigo-600"></i> 👥 团队AI模型下载与配置
+          </button>
+        </div>
+        <button onclick="closeModal('guideModal')" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- 标签页 1：极速工作流 -->
+      <div id="guideTabWorkflow" class="overflow-y-auto space-y-3.5 text-xs text-slate-600 pr-1 leading-relaxed">
+        <div class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1.5">
+          <p class="font-bold text-indigo-900 text-sm">第一步：从您的 Google 表格复制</p>
+          <p>打开您的 Google 表格【安桑每日爆贴】，按快捷键 <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono font-bold">Ctrl + A</kbd> 全选表格（或选中包含 B 列中文与 C 列葡语的数据行），按 <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono font-bold">Ctrl + C</kbd> 复制。</p>
+        </div>
+
+        <div class="p-3.5 bg-purple-50/70 border border-purple-200 rounded-xl space-y-1.5">
+          <p class="font-bold text-purple-900 text-sm">第二步：粘贴到 GospelFlow</p>
+          <p>回到工作台，点击蓝色的 <b>【📋 一键粘贴表格数据】</b> 按钮（或直接在页面中按 <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono font-bold">Ctrl + V</kbd>）。软件会自动提取 B 列中文、C 列葡语、D 列播放量，并<b>自动跳过第 2、3 行空白行</b>！</p>
+        </div>
+
+        <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
+          <p class="font-bold text-amber-900 text-sm">第三步：点击智能重组</p>
+          <p>点击中部的 <b>【🚀 开始 AI 智能重组新文案】</b> 按钮。本地 RTX 5060 的 Meta Llama 3.1 将自动理解每篇文案的属灵主题，把最合适的黄金启语（钩子）嫁接到同向见证主体上，杜绝逻辑崩塌。</p>
+        </div>
+
+        <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1.5">
+          <p class="font-bold text-emerald-900 text-sm">第四步：一键复制回 Google 表格</p>
+          <p>生成完成后，点击绿色的 <b>【📋 一键复制全部成品】</b> 按钮。回到您的 Google 表格【成品】标签页，在第 2 行直接按 <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono font-bold">Ctrl + V</kbd>，整张表工整入列！</p>
+        </div>
+      </div>
+
+      <!-- 标签页 2：团队 AI 模型下载与配置指南 (Win & Mac 双平台支持) -->
+      <div id="guideTabTeam" class="hidden overflow-y-auto space-y-3.5 text-xs text-slate-600 pr-1 leading-relaxed">
+        
+        <!-- 打包分发总览 -->
+        <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center space-x-2.5">
+          <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
+            <i class="fa-solid fa-box-archive"></i>
+          </div>
+          <div class="text-[11px] text-amber-900 leading-snug">
+            <b>如何打包发给团队成员？</b> 直接将本工具文件夹压缩为 <code class="font-bold bg-white px-1 py-0.5 rounded border border-amber-300">.zip</code> 压缩包发送给同事。无论是 <b>Windows</b> 还是 <b>Mac 苹果电脑</b>，解压后按下方指引配置一次模型，即可永久离线使用！
+          </div>
+        </div>
+
+        <!-- 平台 1：Windows 电脑配置指引 -->
+        <div class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-indigo-900 text-sm flex items-center">
+              <i class="fa-brands fa-windows text-indigo-600 mr-1.5 text-base"></i>
+              一、Windows 电脑配置步骤 (有独立显卡效果更佳)
+            </span>
+            <span class="px-2 py-0.5 bg-indigo-200/60 text-indigo-800 rounded font-semibold text-[10px]">双击 .bat 启动</span>
+          </div>
+
+          <!-- 第一步 -->
+          <div class="bg-white p-2.5 rounded-lg border border-indigo-100 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800">1. 安装 Ollama 软件</span>
+              <a href="https://ollama.com/download/windows" target="_blank" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs shadow-sm transition flex items-center space-x-1">
+                <i class="fa-solid fa-download"></i>
+                <span>点击下载 Windows 官方安装包</span>
+              </a>
+            </div>
+            <p class="text-slate-500 text-[11px]">下载后双击运行 <code class="text-indigo-700 font-bold">OllamaSetup.exe</code>，按照默认提示一直下一步完成安装。</p>
+          </div>
+
+          <!-- 第二步 -->
+          <div class="bg-white p-2.5 rounded-lg border border-indigo-100 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800">2. 下载 Meta Llama 3.1:8b 大模型</span>
+              <span class="text-slate-400 text-[11px]">体积约 4.7 GB (仅需下载一次)</span>
+            </div>
+            <p class="text-slate-500 text-[11px]">按键盘快捷键 <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold">Win + R</kbd>，输入 <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold">cmd</kbd> 回车打开黑色命令行，输入命令回车：</p>
+            <div class="flex items-center justify-between p-2 bg-slate-900 rounded-lg border border-slate-800 text-emerald-400 font-mono text-xs">
+              <span>ollama run llama3.1:8b</span>
+              <button onclick="copyToClipboard('ollama run llama3.1:8b', '模型下载命令')" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-sans transition">
+                <i class="fa-regular fa-copy mr-1"></i>复制命令
+              </button>
+            </div>
+            <p class="text-slate-500 text-[11px]">下载完成后终端显示 <code class="text-emerald-700 font-bold">&gt;&gt;&gt; Send a message</code> 即表示成功，直接关闭黑色命令行即可。</p>
+          </div>
+
+          <!-- 第三步 -->
+          <div class="bg-white p-2.5 rounded-lg border border-indigo-100 space-y-1">
+            <span class="font-bold text-slate-800">3. 启动 GospelFlow</span>
+            <p class="text-slate-500 text-[11px]">在解压文件夹中，双击运行 <code class="text-indigo-700 font-bold bg-indigo-50 px-1 py-0.5 rounded">启动工作台.bat</code>，浏览器会自动打开并显示本地模型已就绪！</p>
+          </div>
+        </div>
+
+        <!-- 平台 2：Mac 苹果电脑配置指引 -->
+        <div class="p-3.5 bg-slate-100/90 border border-slate-300 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 text-sm flex items-center">
+              <i class="fa-brands fa-apple text-slate-800 mr-1.5 text-base"></i>
+              二、Mac 苹果电脑配置步骤 (支持 M1/M2/M3/M4 及 Intel Mac)
+            </span>
+            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">双击 .command 启动</span>
+          </div>
+
+          <!-- 第一步 -->
+          <div class="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800">1. 安装 Ollama for Mac</span>
+              <a href="https://ollama.com/download/mac" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs shadow-sm transition flex items-center space-x-1">
+                <i class="fa-solid fa-download"></i>
+                <span>点击下载 Mac 官方安装包 (.zip)</span>
+              </a>
+            </div>
+            <p class="text-slate-500 text-[11px]">下载解压后，将 <code class="text-slate-800 font-bold">Ollama.app</code> 拖入“应用程序 (Applications)”并打开运行即可。</p>
+          </div>
+
+          <!-- 第二步 -->
+          <div class="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800">2. 在 Mac 终端拉取模型</span>
+              <span class="text-slate-400 text-[11px]">统一内存加速，M芯片速度极快</span>
+            </div>
+            <p class="text-slate-500 text-[11px]">按快捷键 <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold">Command + 空格</kbd> 搜索并打开 <b>终端 (Terminal)</b>，粘贴运行：</p>
+            <div class="flex items-center justify-between p-2 bg-slate-900 rounded-lg border border-slate-800 text-emerald-400 font-mono text-xs">
+              <span>ollama run llama3.1:8b</span>
+              <button onclick="copyToClipboard('ollama run llama3.1:8b', '模型下载命令')" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-sans transition">
+                <i class="fa-regular fa-copy mr-1"></i>复制命令
+              </button>
+            </div>
+            <p class="text-slate-500 text-[11px]">下载完成后终端显示 <code class="text-emerald-700 font-bold">&gt;&gt;&gt; Send a message</code> 即可关闭终端。</p>
+          </div>
+
+          <!-- 第三步 -->
+          <div class="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
+            <span class="font-bold text-slate-800">3. 启动 GospelFlow</span>
+            <p class="text-slate-500 text-[11px]">在解压文件夹中，双击运行 <code class="text-slate-800 font-bold bg-slate-100 px-1 py-0.5 rounded">启动工作台_Mac.command</code>，即会自动开启服务并弹出网页工作台！</p>
+          </div>
+        </div>
+
+        <!-- 方案 3：轻薄本无独显 / 云端备选 -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-slate-600">
+          <span class="font-bold text-slate-800 text-xs flex items-center">
+            <i class="fa-solid fa-cloud text-slate-500 mr-1.5"></i>
+            备选：轻薄本无独显或希望直接使用云端引擎
+          </span>
+          <p class="text-[11px] text-slate-500">
+            若成员电脑性能有限，也可直接点击工作台右上角的【⚙️ 设置】，切换为 <b>xAI Grok</b> 或 <b>Google Gemini</b> 并填入 API Key 即可。
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+        <span class="text-[11px] text-slate-400">GospelFlow · 出海非洲葡语基督徒短视频生产线</span>
+        <button onclick="closeModal('guideModal')" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition">我知道了，开始创作</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 2：设置中心 (本地模型参数) -->
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 card-shadow">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-base text-slate-800 flex items-center">
+          <i class="fa-solid fa-sliders text-indigo-600 mr-2"></i>
+          系统与 AI 引擎设置
+        </h3>
+        <button onclick="closeModal('settingsModal')" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3.5 text-xs text-slate-600">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">AI 驱动模型引擎：</label>
+          <select id="engineTypeSelect" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800">
+            <option value="ollama">本地 Meta Llama 3.1:8b (NVIDIA RTX 5060 极速 ~3s · 免费)</option>
+            <option value="grok">xAI Grok API (需填入海外 Key)</option>
+            <option value="gemini">Google Gemini 1.5 Flash (需填入海外 Key)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">本地 Ollama 服务端口：</label>
+          <input id="ollamaUrlInput" type="text" value="http://localhost:11434" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">云端 API Key (使用本地模型时可留空)：</label>
+          <input id="apiKeyInput" type="password" placeholder="xai-... 或 AIzaSy..." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800">
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+        <button onclick="closeModal('settingsModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition">取消</button>
+        <button onclick="saveSettings()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition">保存设置</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 核心逻辑脚本 (全表格交互 + 语义重组引擎) -->
+  <!-- ========================================================================= -->
+  <script>
+    // 原始爆款表格数据
+    let rawScriptsData = [];
+    // 生成成品表格数据
+    let finishedResultsData = [];
+
+    // 系统配置
+    let appConfig = {
+      engineType: 'ollama',
+      ollamaUrl: 'http://localhost:11434',
+      ollamaModel: 'llama3.1:latest',
+      apiKey: ''
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedConfig();
+      loadSampleRawData();
+      checkEngineStatus();
+      updateTargetDatePreview();
+      fetchLanInfo();
+      // 静默自动检测 GitHub 远程更新
+      setTimeout(() => checkForUpdates(false), 1500);
+
+      // 全局粘贴监听：如果在页面按 Ctrl+V，智能捕获表格
+      document.addEventListener('paste', handleGlobalPaste);
+    });
+
+    // =========================================================================
+    // 在线热更新引擎 (直连 GitHub 官方仓库一键静默/交互升级)
+    // =========================================================================
+    let cachedUpdateInfo = null;
+
+    async function checkForUpdates(isManual = false) {
+      const btn = document.getElementById('updateCheckBtn');
+      const icon = document.getElementById('updateIcon');
+      const text = document.getElementById('updateBtnText');
+
+      if (isManual && icon && text) {
+        icon.className = 'fa-solid fa-spinner fa-spin text-amber-300';
+        text.innerText = '检查中...';
+      }
+
+      try {
+        const res = await fetch('/api/update/check');
+        if (!res.ok) throw new Error('网络请求异常');
+        const data = await res.json();
+        cachedUpdateInfo = data;
+
+        if (data.has_update) {
+          btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-lg text-xs font-bold shadow-md shadow-emerald-500/30 animate-pulse transition cursor-pointer';
+          btn.innerHTML = `<i class="fa-solid fa-sparkles text-amber-200"></i><span>发现新版 v${data.latest_version} (点此升级)</span>`;
+          
+          if (isManual) {
+            confirmAndApplyUpdate(data);
+          }
+        } else {
+          if (icon) icon.className = 'fa-solid fa-cloud-arrow-down text-slate-400';
+          if (text) text.innerText = `v${data.current_version || '1.1.0'}`;
+          btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer';
+          if (isManual) {
+            showToast(`当前已是最新版本 (v${data.current_version})！`, true);
+          }
+        }
+      } catch (err) {
+        console.warn('更新检查失败:', err);
+        if (isManual) {
+          if (icon) icon.className = 'fa-solid fa-cloud-arrow-down text-slate-400';
+          if (text) text.innerText = 'v1.1.0';
+          showToast('无法连接 GitHub 检查更新，请确认网络连接', false);
+        }
+      }
+    }
+
+    function manualCheckUpdate() {
+      if (cachedUpdateInfo && cachedUpdateInfo.has_update) {
+        confirmAndApplyUpdate(cachedUpdateInfo);
+      } else {
+        checkForUpdates(true);
+      }
+    }
+
+    function confirmAndApplyUpdate(data) {
+      const msg = `🎉 发现 GospelFlow 最新版本 v${data.latest_version}！\n\n【更新内容】：\n${data.release_notes || '常规性能优化与功能升级'}\n\n是否立即一键自动下载并热替换？(无需重新打包，无损保留数据)`;
+      if (confirm(msg)) {
+        applyOnlineUpdate();
+      }
+    }
+
+    async function applyOnlineUpdate() {
+      showToast('正在从 GitHub 下载最新代码并热替换，请稍候...', true);
+      const btn = document.getElementById('updateCheckBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i><span>正在更新...</span>';
+
+      try {
+        const res = await fetch('/api/update/apply', { method: 'POST' });
+        const result = await res.json();
+        if (res.ok && result.status === 'success') {
+          showToast('🎉 更新成功！页面即将自动刷新...', true);
+          setTimeout(() => {
+            location.reload();
+          }, 1200);
+        } else {
+          throw new Error(result.message || '更新应用失败');
+        }
+      } catch (err) {
+        alert('更新失败: ' + err.message);
+        btn.disabled = false;
+        checkForUpdates(false);
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // 极速教程与团队部署指南标签切换
+    function switchGuideTab(tabName) {
+      const tabWorkflow = document.getElementById('guideTabWorkflow');
+      const tabTeam = document.getElementById('guideTabTeam');
+      const btnWorkflow = document.getElementById('guideTabBtnWorkflow');
+      const btnTeam = document.getElementById('guideTabBtnTeam');
+
+      if (tabName === 'workflow') {
+        tabWorkflow.classList.remove('hidden');
+        tabTeam.classList.add('hidden');
+        btnWorkflow.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition bg-indigo-600 text-white shadow-sm';
+        btnTeam.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+      } else {
+        tabWorkflow.classList.add('hidden');
+        tabTeam.classList.remove('hidden');
+        btnTeam.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition bg-indigo-600 text-white shadow-sm';
+        btnWorkflow.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+      }
+    }
+
+    function openGuideWithTab(tabName) {
+      openModal('guideModal');
+      switchGuideTab(tabName);
+    }
+
+    // 通用剪贴板复制工具
+    function copyToClipboard(text, label = '内容') {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`📋 已成功复制${label}到剪贴板！`);
+      }).catch(err => {
+        // 回退弹窗让用户复制
+        prompt(`请按 Ctrl+C 复制${label}:`, text);
+      });
+    }
+
+    // 探测本机局域网 IP
+    async function fetchLanInfo() {
+      try {
+        const res = await fetch('/api/info');
+        if (res.ok) {
+          const data = await res.json();
+          const displayEl = document.getElementById('guideLanUrlDisplay');
+          if (displayEl && data.lan_url) {
+            displayEl.innerText = data.lan_url;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // =========================================================================
+    // 智能排期日期推演核心函数
+    // =========================================================================
+
+    function getTargetDateInfo() {
+      const isEnabled = document.getElementById('autoDateShiftCheck')?.checked ?? true;
+      const offset = parseInt(document.getElementById('dateShiftDaysSelect')?.value, 10) || 3;
+      const now = new Date();
+      
+      const d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+      const d1 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset + 1);
+      const d2 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset + 2);
+      
+      const ptMonths = [
+        'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+      ];
+      
+      const mZh = d0.getMonth() + 1;
+      const day0 = d0.getDate();
+      const day1 = d1.getDate();
+      const day2 = d2.getDate();
+      const monthPt = ptMonths[d0.getMonth()];
+      
+      return {
+        enabled: isEnabled,
+        offset,
+        todayZh: `${now.getMonth() + 1}月${now.getDate()}日`,
+        todayPt: `dia ${now.getDate()} de ${ptMonths[now.getMonth()]}`,
+        singleZh: `${mZh}月${day0}日`,
+        singlePt: `dia ${day0} de ${monthPt}`,
+        singlePtShort: `${day0} de ${monthPt}`,
+        range2Zh: `${mZh}月${day0}日和${day1}日`,
+        range2Pt: `dias ${day0} e ${day1} de ${monthPt}`,
+        range3Zh: `${mZh}月${day0}日、${day1}日和${day2}日`,
+        range3Pt: `dias ${day0}, ${day1} e ${day2} de ${monthPt}`
+      };
+    }
+
+    function updateTargetDatePreview() {
+      const info = getTargetDateInfo();
+      const badge = document.getElementById('targetDatePreviewBadge');
+      if (badge) {
+        if (!info.enabled) {
+          badge.innerText = '已关闭日期自动顺延';
+          badge.className = 'hidden sm:inline-block px-2 py-0.5 bg-slate-800 text-slate-400 border border-slate-700 rounded font-normal text-[11px] whitespace-nowrap';
+        } else {
+          badge.innerText = `👉 目标排期: ${info.singleZh} (${info.singlePt})`;
+          badge.className = 'hidden sm:inline-block px-2 py-0.5 bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded font-semibold text-[11px] whitespace-nowrap';
+        }
+      }
+    }
+
+    function updateDateControlsState() {
+      const check = document.getElementById('autoDateShiftCheck');
+      const select = document.getElementById('dateShiftDaysSelect');
+      if (select && check) {
+        select.disabled = !check.checked;
+        if (!check.checked) {
+          select.classList.add('opacity-40');
+        } else {
+          select.classList.remove('opacity-40');
+        }
+      }
+      updateTargetDatePreview();
+    }
+
+    // 智能校准文案中的日期 (双重保险：先由AI生成，再经此精确模式兜底)
+    function adjustScriptDates(textZh, textPt, dateInfo) {
+      if (!dateInfo || !dateInfo.enabled) {
+        return { chinese: textZh, portuguese: textPt };
+      }
+
+      // 中文日期替换 (占位符策略杜绝二次匹配嵌套)
+      let zh = textZh || '';
+      zh = zh.replace(/(?:\d{1,2}月)?\d{1,2}日?[、,]\s*\d{1,2}日?(?:[、,]\s*\d{1,2}日?)?(?:和|及|与)\s*\d{1,2}日?/g, '___ZH_RANGE3___');
+      zh = zh.replace(/(?:\d{1,2}月)?\d{1,2}日?(?:和|及|与)\s*\d{1,2}日?/g, '___ZH_RANGE2___');
+      zh = zh.replace(/\d{1,2}月\d{1,2}日/g, '___ZH_SINGLE___');
+
+      zh = zh.replace(/___ZH_RANGE3___/g, dateInfo.range3Zh)
+             .replace(/___ZH_RANGE2___/g, dateInfo.range2Zh)
+             .replace(/___ZH_SINGLE___/g, dateInfo.singleZh);
+
+      // 葡语日期替换 (精准占位符机制)
+      let pt = textPt || '';
+      const ptMap = [];
+
+      // 1. 连续3天活动 (如 nos dias 3, 4 e 5 de outubro)
+      pt = pt.replace(/\b(nos\s+)?dias\s+\d{1,2},\s*\d{1,2}\s+e\s+\d{1,2}\s+de\s+[a-zçã]+/gi, (m, prep) => {
+        const id = '___PT_PH_' + ptMap.length + '___';
+        ptMap.push({ id, val: (prep ? 'nos ' : '') + dateInfo.range3Pt });
+        return id;
+      });
+
+      // 2. 连续2天活动 (如 nos dias 3 e 4 de outubro)
+      pt = pt.replace(/\b(nos\s+)?dias\s+\d{1,2}\s+e\s+\d{1,2}\s+de\s+[a-zçã]+/gi, (m, prep) => {
+        const id = '___PT_PH_' + ptMap.length + '___';
+        ptMap.push({ id, val: (prep ? 'nos ' : '') + dateInfo.range2Pt });
+        return id;
+      });
+
+      // 3. 单日 (带 no dia 或 dia，如 no dia 3 de outubro)
+      pt = pt.replace(/\b(no\s+)?dia\s+\d{1,2}\s+de\s+[a-zçã]+/gi, (m, prep) => {
+        const id = '___PT_PH_' + ptMap.length + '___';
+        ptMap.push({ id, val: (prep ? 'no ' : '') + dateInfo.singlePt });
+        return id;
+      });
+
+      // 4. 单日 (无 dia，如 3 de outubro)
+      pt = pt.replace(/\b\d{1,2}\s+de\s+(?:janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/gi, (m) => {
+        const id = '___PT_PH_' + ptMap.length + '___';
+        ptMap.push({ id, val: dateInfo.singlePtShort });
+        return id;
+      });
+
+      // 解析占位符还原
+      for (const item of ptMap) {
+        pt = pt.replace(item.id, item.val);
+      }
+
+      return { chinese: zh, portuguese: pt };
+    }
+
+    // =========================================================================
+    // 鲁棒型 JSON 数组提取引擎 (彻底解决 AI 输出附带文字、注释括号、尾随逗号导致的解析报错)
+    // =========================================================================
+    function extractJsonArrayRobust(text) {
+      if (!text) return null;
+      // 1. 去除 Markdown 代码块标记 ```json ... ```
+      let clean = text.replace(/```(?:json)?/gi, '').trim();
+
+      // 2. 找到第一个 '[' 作为 JSON 数组起点
+      const startIdx = clean.indexOf('[');
+      if (startIdx === -1) return null;
+
+      let inString = false;
+      let escape = false;
+      let depth = 0;
+      let endIdx = -1;
+
+      for (let i = startIdx; i < clean.length; i++) {
+        const ch = clean[i];
+
+        if (escape) {
+          escape = false;
+          continue;
+        }
+
+        if (ch === '\\' && inString) {
+          escape = true;
+          continue;
+        }
+
+        if (ch === '"') {
+          inString = !inString;
+          continue;
+        }
+
+        if (!inString) {
+          if (ch === '[') {
+            depth++;
+          } else if (ch === ']') {
+            depth--;
+            if (depth === 0) {
+              endIdx = i;
+              break;
+            }
+          }
+        }
+      }
+
+      // 如果大模型生成中断未闭合，尝试找到最后一个 '}' 并自动闭合
+      if (endIdx === -1) {
+        const lastBrace = clean.lastIndexOf('}');
+        if (lastBrace > startIdx) {
+          clean = clean.slice(startIdx, lastBrace + 1) + ']';
+          endIdx = clean.length - 1;
+        } else {
+          return null;
+        }
+      }
+
+      const jsonStr = clean.slice(startIdx, endIdx + 1).trim();
+
+      // 先尝试原生快速解析
+      try {
+        return JSON.parse(jsonStr);
+      } catch (err) {
+        // 如果报语法错误，自动修复常见的尾随多余逗号 (如 { ... }, ])
+        const repaired = jsonStr.replace(/,\s*([\]}])/g, '$1');
+        try {
+          return JSON.parse(repaired);
+        } catch (_) {
+          // 进一步修复内部字符串未转义换行符
+          try {
+            const repairedNewlines = repaired.replace(/([^\\])\n/g, '$1\\n');
+            return JSON.parse(repairedNewlines);
+          } catch (finalErr) {
+            console.error('JSON 修复失败，原始串:', jsonStr);
+            throw err;
+          }
+        }
+      }
+    }
+
+    function showToast(msg, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+      toastMsg.innerText = msg;
+      toastIcon.className = isSuccess ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-exclamation text-rose-400';
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // =========================================================================
+    // 表格操作 1：原始爆贴工作表 (Raw Table)
+    // =========================================================================
+
+    function renderRawTable() {
+      const tbody = document.getElementById('rawTableBody');
+      const badge = document.getElementById('rawCountBadge');
+      const stats = document.getElementById('rawTableStats');
+
+      badge.innerText = `${rawScriptsData.length} 条文案`;
+      stats.innerText = `有效文案: ${rawScriptsData.length} 条`;
+
+      if (rawScriptsData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="p-12 text-center text-slate-400 space-y-2">
+              <i class="fa-solid fa-table-cells text-3xl text-slate-300"></i>
+              <p class="font-medium text-slate-600">当前表格为空</p>
+              <p class="text-[11px] text-slate-400">在 Google 表格中按 Ctrl+A 复制后，点击上方<b>【📋 一键粘贴表格数据】</b>或直接在此按 Ctrl+V</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = rawScriptsData.map((item, idx) => `
+        <tr class="hover:bg-indigo-50/40 transition group">
+          <td class="p-2 text-center font-bold text-slate-400 border-r border-slate-200 select-none bg-slate-50/50">
+            ${idx + 1}
+          </td>
+          <td class="p-2 border-r border-slate-200 align-top">
+            <textarea class="w-full bg-transparent border-0 resize-y p-1 rounded hover:bg-white focus:bg-white focus:ring-1 focus:ring-indigo-500 text-slate-800 leading-relaxed text-xs transition" rows="3" onchange="updateRawCell(${idx}, 'chinese', this.value)">${escapeHtml(item.chinese)}</textarea>
+          </td>
+          <td class="p-2 border-r border-slate-200 align-top">
+            <textarea class="w-full bg-transparent border-0 resize-y p-1 rounded hover:bg-white focus:bg-white focus:ring-1 focus:ring-indigo-500 text-slate-700 leading-relaxed text-xs transition" rows="3" onchange="updateRawCell(${idx}, 'portuguese', this.value)">${escapeHtml(item.portuguese)}</textarea>
+          </td>
+          <td class="p-2 text-center border-r border-slate-200 align-top font-bold text-emerald-700">
+            <input type="text" class="w-full text-center bg-transparent border-0 p-1 rounded hover:bg-white focus:bg-white focus:ring-1 focus:ring-indigo-500 text-xs font-semibold" value="${escapeHtml(item.views || '')}" placeholder="如 40W" onchange="updateRawCell(${idx}, 'views', this.value)">
+          </td>
+          <td class="p-2 border-r border-slate-200 align-top text-slate-500">
+            <input type="text" class="w-full bg-transparent border-0 p-1 rounded hover:bg-white focus:bg-white focus:ring-1 focus:ring-indigo-500 text-xs text-slate-600" value="${escapeHtml(item.note || '')}" placeholder="主题/标签" onchange="updateRawCell(${idx}, 'note', this.value)">
+          </td>
+          <td class="p-2 text-center align-top">
+            <button onclick="deleteRawRow(${idx})" class="text-slate-300 hover:text-rose-500 p-1 transition" title="删除此行">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function updateRawCell(index, field, value) {
+      if (rawScriptsData[index]) {
+        rawScriptsData[index][field] = value.trim();
+      }
+    }
+
+    function addEmptyRawRow() {
+      rawScriptsData.push({
+        chinese: '',
+        portuguese: '',
+        views: '',
+        note: ''
+      });
+      renderRawTable();
+    }
+
+    function deleteRawRow(index) {
+      rawScriptsData.splice(index, 1);
+      renderRawTable();
+    }
+
+    function clearRawTable() {
+      if (rawScriptsData.length === 0) return;
+      if (!confirm('确定清空当前原始表格中的所有数据吗？')) return;
+      rawScriptsData = [];
+      renderRawTable();
+      showToast('已清空原始表格');
+    }
+
+    // 核心工具：智能从剪贴板读取并填入原始表格
+    async function pasteFromClipboardToRawTable() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (!text || !text.trim()) {
+          showToast('剪贴板中暂无内容，请先在 Google 表格中按 Ctrl+C 复制', false);
+          return;
+        }
+        processAndLoadRawTsvText(text);
+      } catch (err) {
+        // 如果浏览器拦截了直接 readText，弹窗让用户粘贴
+        const manual = prompt('请在此处按 Ctrl+V 粘贴从 Google 表格复制的内容：');
+        if (manual) processAndLoadRawTsvText(manual);
+      }
+    }
+
+    // 全局快捷键粘贴处理
+    function handleGlobalPaste(e) {
+      // 如果当前聚焦在某个 input 或 textarea 内，允许原生输入，不劫持
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (activeTag === 'textarea' || activeTag === 'input') return;
+
+      const clipboardData = e.clipboardData || window.clipboardData;
+      if (!clipboardData) return;
+      const text = clipboardData.getData('text');
+      if (text && text.includes('\t')) {
+        e.preventDefault();
+        processAndLoadRawTsvText(text);
+      }
+    }
+
+    // 核心引擎 1：带引号感知的专业 TSV 解析器 (完美支持单元格内包含换行符、引号、制表符)
+    function parseTSVQuoteAware(text) {
+      const rows = [];
+      let currentRow = [];
+      let currentCell = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            currentCell += '"';
+            i++; // 跳过转义双引号
+          } else {
+            inQuotes = !inQuotes; // 切换引号状态
+          }
+        } else if (char === '\t' && !inQuotes) {
+          currentRow.push(currentCell.trim());
+          currentCell = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+          if (char === '\r' && nextChar === '\n') {
+            i++;
+          }
+          currentRow.push(currentCell.trim());
+          if (currentRow.some(c => c.length > 0)) {
+            rows.push(currentRow);
+          }
+          currentRow = [];
+          currentCell = '';
+        } else {
+          currentCell += char;
+        }
+      }
+
+      if (currentCell.length > 0 || currentRow.length > 0) {
+        currentRow.push(currentCell.trim());
+        if (currentRow.some(c => c.length > 0)) {
+          rows.push(currentRow);
+        }
+      }
+
+      return rows;
+    }
+
+    // 核心引擎 2：智能语言与内容列自动探测识别器 (无视复制范围与顺序，100% 确保中文进 B 列、葡语进 C 列、播放量进 D 列)
+    function extractRowFields(parts) {
+      // 过滤表头行
+      const isHeader = parts.some(p => p === '中文' || p === '葡语' || p === '播放量' || p.includes('爆贴文案'));
+      if (isHeader) return null;
+
+      let chinese = '';
+      let portuguese = '';
+      let views = '';
+      let note = '';
+
+      parts.forEach((cell) => {
+        const val = cell.trim();
+        if (!val) return;
+
+        // 1. 日期判断 (如 2026-10-02)
+        if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/.test(val) && val.length <= 15) {
+          if (!note) note = val;
+          return;
+        }
+
+        // 2. 播放量判断 (如 40W, 25w, 13W, 5.6w+5.7w, tk 10.8 w, tiktok 8.7w, 114w 等)
+        if (/^(tk|tiktok)?\s*\d+(\.\d+)?\s*[wWkK万千]?(\+\d+(\.\d+)?[wWkK万千]?)?$/i.test(val) || (/^[0-9.]+\s*[wWkK万千]/i.test(val) && val.length < 20)) {
+          if (!views) views = val;
+          return;
+        }
+
+        // 3. 中文识别 (检测汉字字符数量)
+        const chineseChars = (val.match(/[\u4e00-\u9fa5]/g) || []).length;
+        if (chineseChars >= 3) {
+          if (!chinese || chineseChars > (chinese.match(/[\u4e00-\u9fa5]/g) || []).length) {
+            if (chinese && !note) note = chinese;
+            chinese = val;
+          }
+          return;
+        }
+
+        // 4. 葡语识别 (检测纯拉丁字母/葡语特殊重音符，且不含汉字)
+        const latinChars = (val.match(/[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]/g) || []).length;
+        if (latinChars >= 8 && chineseChars === 0) {
+          if (!portuguese || latinChars > (portuguese.match(/[a-zA-Z]/g) || []).length) {
+            portuguese = val;
+          }
+          return;
+        }
+
+        // 其他简短信息存入备注
+        if (!note && val.length < 50) {
+          note = val;
+        }
+      });
+
+      // 只要具备中文或葡语任意一项，即为有效行；纯空行跳过
+      if (!chinese && !portuguese) return null;
+      return { chinese, portuguese, views, note };
+    }
+
+    // 整合入口：精准解析从 Google 表格复制的任意多列/单列数据
+    function processAndLoadRawTsvText(text) {
+      if (!text || !text.trim()) return;
+
+      const rawGrid = parseTSVQuoteAware(text.trim());
+      const parsedRows = [];
+
+      rawGrid.forEach((parts) => {
+        if (!parts || parts.length === 0) return;
+        
+        const extracted = extractRowFields(parts);
+        if (extracted) {
+          parsedRows.push(extracted);
+        }
+      });
+
+      if (parsedRows.length === 0) {
+        showToast('未能识别出有效文案，请确保复制的内容包含中文或葡语文案', false);
+        return;
+      }
+
+      // 总是将最新粘贴的数据直接载入表格（替换之前的旧数据或样例数据）
+      rawScriptsData = parsedRows;
+
+      renderRawTable();
+      showToast(`🎉 成功导入 ${parsedRows.length} 条爆款文案！中文、葡语、播放量已精准归位！`);
+    }
+
+    // 加载经典基督教短视频爆款示例
+    function loadSampleRawData() {
+      rawScriptsData = [
+        {
+          chinese: '10月3日、4日和5日。手持这部手机的人是有福的。愿上帝赐给你和你的家人丰盛的平安与属天的喜乐！世俗生活的波折不能阻挡全能神对你的看顾。请在评论区大声写下【阿们 (Amém)】，凭信心领受！',
+          portuguese: 'Nos dias 3, 4 e 5 de outubro. A pessoa que segura este telefone é muito abençoada. Que o Deus Todo-Poderoso abençoe você e sua família com paz e alegria! Deixe o seu Amém nos comentários!',
+          views: '40W',
+          note: '示例数据'
+        },
+        {
+          chinese: '信徒问：牧师，我有一个问题，我应该如何与妻子相处？圣经明确教导我们：作丈夫的要爱你们的妻子，正如基督爱教会，为教会舍己。不要带着怒气对话，要用祷告托住你们的家庭。在评论区留下【Glória a Deus】！',
+          portuguese: 'Pastor, tenho uma pergunta: como devo tratar a minha esposa? A Bíblia ensina claramente que os maridos devem amar suas esposas como Cristo amou a igreja. Ore pela sua família! Escreva Glória a Deus!',
+          views: '25W',
+          note: '示例数据'
+        },
+        {
+          chinese: '你是否在深夜独自流泪，为了生活的重担、债务的压力感到无助？马太福音应许说：凡劳苦担重担的人，可以到我这里来，我就使你们得安息。神绝不会丢弃任何一个呼求祂的人。留下你的名字，我们为你代祷！',
+          portuguese: 'Você está chorando sozinho no meio da noite por causa do fardo e das dificuldades? Jesus disse: Vinde a mim todos os cansados, e eu vos aliviarei. Deixe seu nome para orarmos por você!',
+          views: '13W',
+          note: '示例数据'
+        },
+        {
+          chinese: '使许多敬虔信徒失去属天祝福的三个陷阱：第一是口舌的抱怨，第二是暗中的懈怠，第三是对神应许的怀疑。唯有常常喜乐、不住地祷告、凡事谢恩。如果你渴望被彻底医治更新，请在心中默念【阿们】！',
+          portuguese: 'Três pecados que fazem muitos crentes perderem as bênçãos dos céus: murmuração, desânimo e dúvida na palavra de Deus. Ore sem cessar! Escreva Amém para receber a cura e libertação divina!',
+          views: '10.8W',
+          note: '示例数据'
+        },
+        {
+          chinese: '主啊，今天请垂听此刻正在观看这篇视频之人的迫切祷告！求您挪去他心中的焦虑，医治他身体的软弱，恢复他的信心。让主耶稣丰盛的恩膏浇灌他的全家！深信必得着的弟兄姊妹，请转发给三位同道家人！',
+          portuguese: 'Senhor, ouve a oração da pessoa que está a ver este vídeo agora. Cura as suas dores, renova a sua esperança e restaura a sua família no poder de Jesus. Compartilhe esta bênção com 3 irmãos!',
+          views: '9.6W',
+          note: '示例数据'
+        }
+      ];
+      renderRawTable();
+    }
+
+
+    // =========================================================================
+    // 控制中枢：AI 语义理解与智能重组 (不搞笑话 · 同向嫁接)
+    // =========================================================================
+
+    async function startSmartRecombination() {
+      if (rawScriptsData.length < 2) {
+        showToast('请先在原始表格中准备至少 2 条爆款文案！', false);
+        return;
+      }
+
+      const count = parseInt(document.getElementById('recombineCountSelect').value, 10) || 5;
+      const progressBanner = document.getElementById('aiProgressBanner');
+      const progressText = document.getElementById('aiProgressText');
+      const progressBar = document.getElementById('aiProgressBar');
+      const progressPercent = document.getElementById('aiProgressPercent');
+      const btn = document.getElementById('startRecombineBtn');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+      progressBanner.classList.remove('hidden');
+
+      const updateProgress = (pct, text) => {
+        progressBar.style.width = `${pct}%`;
+        progressPercent.innerText = `${pct}%`;
+        progressText.innerText = text;
+      };
+
+      try {
+        updateProgress(10, '正在提取爆款素材与核心属灵主题画像...');
+
+        // 整理文案摘要供 AI 理解 (提供中葡双语参考)
+        const candidateScripts = rawScriptsData.map((item, idx) => ({
+          id: idx + 1,
+          chinese: item.chinese,
+          portuguese: item.portuguese || '',
+          views: item.views || ''
+        }));
+
+        // 获取日期推演参数与排期设置
+        const dateInfo = getTargetDateInfo();
+
+        // 计算批次规划 (单批不超过5篇，保证本地模型 2048 token 限制下绝对不截断且极速完成)
+        const batches = [];
+        if (count <= 5) {
+          batches.push(count);
+        } else if (count <= 8) {
+          batches.push(4, count - 4);
+        } else if (count <= 12) {
+          batches.push(4, 4, count - 8);
+        } else if (count === 15) {
+          batches.push(5, 5, 5);
+        } else if (count === 20) {
+          batches.push(5, 5, 5, 5);
+        } else {
+          let rem = count;
+          while (rem > 0) {
+            const sz = Math.min(rem, 5);
+            batches.push(sz);
+            rem -= sz;
+          }
+        }
+
+        // 清空之前的成品列表准备接收最新重组
+        finishedResultsData = [];
+        renderResultsTable();
+
+        for (let bIdx = 0; bIdx < batches.length; bIdx++) {
+          const batchSize = batches[bIdx];
+          const startNum = finishedResultsData.length + 1;
+          const endNum = finishedResultsData.length + batchSize;
+          const currentBatchPct = Math.round(15 + (bIdx / batches.length) * 75);
+
+          if (batches.length > 1) {
+            updateProgress(
+              currentBatchPct,
+              `正在生成第 ${bIdx + 1}/${batches.length} 批 (本批 ${batchSize} 篇，总计 ${count} 篇中的 #${startNum}~#${endNum})...`
+            );
+          } else {
+            updateProgress(35, `已加载 ${candidateScripts.length} 条爆款，正在调用本地 Meta Llama 3.1 深度理解与重组...`);
+          }
+
+          // 日期校准提示语
+          let dateRulePrompt = '';
+          if (dateInfo.enabled) {
+            dateRulePrompt = `
+5. 【📅 智能日期自动排期校准 (至关重要)】:
+   - 今日日期为: ${dateInfo.todayZh} (${dateInfo.todayPt})。
+   - 目标发布排期为: ${dateInfo.singleZh} (${dateInfo.singlePt})。
+   - 原始爆款文案中若包含任何过去的具体日期（如历史测试日期、过去的日子或连续守望祈祷会），在重组成品中必须全部自动推演顺延为即将发布的排期日期：
+     * 单日活动统一替换为：【${dateInfo.singleZh}】(葡语: ${dateInfo.singlePt})；
+     * 连续3日活动统一替换为：【${dateInfo.range3Zh}】(葡语: ${dateInfo.range3Pt})；
+     * 连续2日活动统一替换为：【${dateInfo.range2Zh}】(葡语: ${dateInfo.range2Pt})；
+   - 严禁在重组后的成品中残留过期的旧日期！`;
+          }
+
+          // 构建深度语义理解与智能重组 Prompt
+          const prompt = `你是一位专门面向非洲葡语国家（安哥拉、莫桑比克）的资深基督教短视频文案创作专家。
+请深度理解以下 ${candidateScripts.length} 篇真实爆款视频口播文案的属灵主题与情感基调，并严格按要求【智能重组 ${batchSize} 篇全新爆款】：
+${batches.length > 1 ? `（注意：当前为总计划 ${count} 篇中的第 ${bIdx + 1}/${batches.length} 批，请使用多样的黄金启语切入点与见证主体组合，保持丰沛的属灵张力）` : ''}
+
+【输入原始爆款文案库】：
+${JSON.stringify(candidateScripts, null, 2)}
+
+【重组的核心法则 - 严防搞笑话与逻辑断裂】：
+1. 提取每篇文案的：黄金启语（前3秒扎心发问/引出神言）、主体见证（旷野困境与圣经恩典应许）、呼召回应（阿们/祷告领受）。
+2. 【严格的主题同向嫁接】：严肃医治祷告的启语，只能搭配医治与信心的主体；家庭与婚姻的主体，只能搭配家庭关怀的启语；断不能将风马牛不相及的主题乱拼（如把痛哭认罪拼进喜庆祝福）。
+3. 【平滑口播过渡】：组合后必须由你加入自然的口播连词，让整篇文案行云流水，富有强烈的现场呼召感与圣灵同在感。
+4. 【中葡双语严格对照输出】：
+   - 中文文案：自然、纯正基督教短视频口播表达；
+   - 葡语文案：【严禁盲目机器翻译】！葡语文案必须直接从所选配方对应行（第X行原启语、第Y行原主体、第Z行原呼召）的原始葡语中提取真实原句进行嫁接，仅由你加入必要的自然口播连词使其平滑过渡，确保 100% 传承原始爆贴的纯正非洲葡语表达（规范使用 Senhor Jesus, Deus Todo-Poderoso, Amém, Glória a Deus, bênção 等核心宗教词汇）。${dateRulePrompt}
+
+【输出格式要求（特别重要）】：
+严格只输出标准 JSON 数组格式。严禁在末尾附加任何说明文字、提示语或带方括号的备注：
+[
+  {
+    "chinese": "完整中文口播新文案...",
+    "portuguese": "Texto completo em português africano...",
+    "recipe": "启语:第X行(播放量) + 主体:第Y行 + 呼召:第Z行",
+    "theme": "婚姻家庭/医治祷告/信心突破等"
+  }
+]`;
+
+          const aiResponse = await callAiEngine(prompt, '严格以标准JSON数组格式返回，禁止任何附加文字');
+          const batchList = extractJsonArrayRobust(aiResponse);
+          if (!batchList || !Array.isArray(batchList) || batchList.length === 0) {
+            console.error('AI 原始响应文本:', aiResponse);
+            throw new Error(`第 ${bIdx + 1} 批未能解析出有效文案，请检查模型连接后重试`);
+          }
+
+          // 逐条校准日期并追加到成品列表
+          batchList.forEach((item) => {
+            const adjusted = adjustScriptDates(item.chinese, item.portuguese, dateInfo);
+            finishedResultsData.push({
+              id: finishedResultsData.length + 1,
+              chinese: adjusted.chinese || '',
+              portuguese: adjusted.portuguese || '',
+              recipe: item.recipe || '智能同频重组',
+              theme: item.theme || ''
+            });
+          });
+
+          // 实时将当前已生成的批次渲染至表格
+          renderResultsTable();
+        }
+
+        updateProgress(100, `🎉 成功重组全部 ${finishedResultsData.length} 篇高质量爆款文案！`);
+        showToast(`🎉 成功智能重组 ${finishedResultsData.length} 篇新爆款！`);
+
+        setTimeout(() => {
+          progressBanner.classList.add('hidden');
+        }, 2500);
+
+      } catch (err) {
+        console.error('智能重组失败:', err);
+        alert('智能重组失败: ' + err.message);
+        progressBanner.classList.add('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+
+    // =========================================================================
+    // 表格操作 2：成品质检工作表 (Results Table)
+    // =========================================================================
+
+    function renderResultsTable() {
+      const tbody = document.getElementById('resultsTableBody');
+      const badge = document.getElementById('resultCountBadge');
+      const stats = document.getElementById('resultsTableStats');
+
+      badge.innerText = `${finishedResultsData.length} 篇成品`;
+      stats.innerText = `已就绪: ${finishedResultsData.length} 篇`;
+
+      if (finishedResultsData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="p-12 text-center text-slate-400 space-y-2">
+              <i class="fa-solid fa-film text-3xl text-slate-300"></i>
+              <p class="font-medium text-slate-600">暂无生成的重组成品</p>
+              <p class="text-[11px] text-slate-400">请先在上方准备原始文案，点击【🚀 开始 AI 智能重组新文案】即可生成</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = finishedResultsData.map((item, idx) => `
+        <tr class="hover:bg-emerald-50/40 transition group">
+          <td class="p-2.5 text-center font-bold text-slate-400 border-r border-slate-200 select-none bg-slate-50/50">
+            #${item.id || (idx + 1)}
+          </td>
+          <td class="p-2.5 border-r border-slate-200 align-top">
+            <textarea class="w-full bg-transparent border-0 resize-y p-1.5 rounded hover:bg-white focus:bg-white focus:ring-1 focus:ring-emerald-500 text-slate-800 leading-relaxed text-xs transition" rows="4" onchange="updateResultCell(${idx}, 'chinese', this.value)">${escapeHtml(item.chinese)}</textarea>
+          </td>
+          <td class="p-2.5 border-r border-slate-200 align-top">
+            <textarea class="w-full bg-transparent border-0 resize-y p-1.5 rounded hover:bg-white focus:bg-white focus:ring-1 focus:ring-emerald-500 text-slate-700 leading-relaxed text-xs transition" rows="4" onchange="updateResultCell(${idx}, 'portuguese', this.value)">${escapeHtml(item.portuguese)}</textarea>
+          </td>
+          <td class="p-2.5 border-r border-slate-200 align-top space-y-1">
+            <span class="inline-block bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-100">
+              ${escapeHtml(item.recipe || '智能重组')}
+            </span>
+            ${item.theme ? `<span class="block text-[10px] text-slate-400">主题: ${escapeHtml(item.theme)}</span>` : ''}
+          </td>
+          <td class="p-2.5 text-center align-top space-y-1.5">
+            <button onclick="copySingleRow(${idx})" class="w-full px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[11px] font-semibold transition active:scale-95 flex items-center justify-center space-x-1" title="复制中葡双语该行">
+              <i class="fa-regular fa-copy"></i>
+              <span>复制此行</span>
+            </button>
+            <div class="flex items-center space-x-1 justify-center">
+              <button onclick="copyCellText('${escapeJs(item.chinese)}', '中文文案')" class="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] transition" title="仅复制中文">
+                中文
+              </button>
+              <button onclick="copyCellText('${escapeJs(item.portuguese)}', '葡语文案')" class="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] transition" title="仅复制葡语">
+                葡语
+              </button>
+              <button onclick="deleteResultRow(${idx})" class="px-1 text-slate-300 hover:text-rose-500 transition" title="删除此行">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function updateResultCell(index, field, value) {
+      if (finishedResultsData[index]) {
+        finishedResultsData[index][field] = value.trim();
+      }
+    }
+
+    function deleteResultRow(index) {
+      finishedResultsData.splice(index, 1);
+      renderResultsTable();
+    }
+
+    function clearResultsTable() {
+      if (finishedResultsData.length === 0) return;
+      if (!confirm('确定清空当前所有生成的成品文案吗？')) return;
+      finishedResultsData = [];
+      renderResultsTable();
+      showToast('已清空成品表格');
+    }
+
+    function escapeJs(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+    }
+
+    // 复制单单元格文本
+    function copyCellText(text, label = '内容') {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`✅ 已复制${label}到剪贴板！`);
+      }).catch(() => {
+        showToast('复制失败，请手动选中文本复制', false);
+      });
+    }
+
+    // 复制单行（中葡对照 TSV 格式）
+    function copySingleRow(index) {
+      const item = finishedResultsData[index];
+      if (!item) return;
+      const tsvLine = `${item.id || (index+1)}\t${formatCellForGoogleSheetTsv(item.chinese)}\t${formatCellForGoogleSheetTsv(item.portuguese)}\t${item.recipe || ''}`;
+      navigator.clipboard.writeText(tsvLine).then(() => {
+        showToast(`✅ 已复制第 ${index + 1} 行！可直接粘贴进表格`);
+      });
+    }
+
+    // 核心功能：一键以 Google 表格 TSV 格式复制全部成品
+    function copyAllResultsToGoogleSheetFormat() {
+      if (finishedResultsData.length === 0) {
+        showToast('暂无成品可复制，请先生成', false);
+        return;
+      }
+
+      // Google 表格标准格式：制表符 \t 分隔列，换行符 \n 分隔行
+      // 包含多段落的单元格用双引号包裹，保证粘贴进 Google 表格后绝对不窜行！
+      const lines = finishedResultsData.map((item, idx) => {
+        const idCol = item.id || (idx + 1);
+        const zhCol = formatCellForGoogleSheetTsv(item.chinese);
+        const ptCol = formatCellForGoogleSheetTsv(item.portuguese);
+        const recCol = formatCellForGoogleSheetTsv(item.recipe || '智能重组');
+        return `${idCol}\t${zhCol}\t${ptCol}\t${recCol}`;
+      });
+
+      const fullTsvText = lines.join('\n');
+      navigator.clipboard.writeText(fullTsvText).then(() => {
+        showToast(`🎉 成功复制全部 ${finishedResultsData.length} 篇成品！直接在 Google 表格按 Ctrl+V 即可带格式粘贴！`);
+      }).catch(err => {
+        alert('复制失败，请允许浏览器剪贴板权限: ' + err.message);
+      });
+    }
+
+    // 将包含换行的长文案格式化为 Google 表格兼容的 TSV 单元格
+    function formatCellForGoogleSheetTsv(text) {
+      if (!text) return '';
+      if (text.includes('\n') || text.includes('\r') || text.includes('\t') || text.includes('"')) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    }
+
+    // 导出 Excel 文件
+    function exportResultsToExcel() {
+      if (finishedResultsData.length === 0) {
+        showToast('暂无成品可导出', false);
+        return;
+      }
+
+      const rows = [
+        ['序号', '中文新文案', '葡语新文案 (非洲口播)', '重组配方', '属灵主题']
+      ];
+
+      finishedResultsData.forEach((item, idx) => {
+        rows.push([
+          item.id || (idx + 1),
+          item.chinese,
+          item.portuguese,
+          item.recipe,
+          item.theme || ''
+        ]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, '重组成品');
+      XLSX.writeFile(wb, `GospelFlow_重组成品_${new Date().toISOString().slice(0,10)}.xlsx`);
+      showToast('🎉 Excel 导出成功！');
+    }
+
+
+    // =========================================================================
+    // 底层引擎调度 (本地 RTX 5060 Ollama 优先)
+    // =========================================================================
+
+    async function callAiEngine(userPrompt, systemPrompt = '') {
+      if (appConfig.engineType === 'ollama') {
+        const fullPrompt = `${systemPrompt ? systemPrompt + '\n\n' : ''}${userPrompt}`;
+        const payload = {
+          model: appConfig.ollamaModel || 'llama3.1:latest',
+          prompt: fullPrompt,
+          stream: false,
+          options: {
+            temperature: 0.6,
+            num_predict: 3072
+          }
+        };
+
+        let response;
+        try {
+          // 优先通过本服务中继（解决跨域与局域网支持）
+          response = await fetch('/api/ollama/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } catch (_) {
+          // 备选直连 Ollama
+          response = await fetch(`${appConfig.ollamaUrl}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        if (!response.ok) {
+          throw new Error(`本地 Ollama 请求异常 (${response.status})，请确认已运行 ollama run llama3.1:8b`);
+        }
+
+        const data = await response.json();
+        return data.response || '';
+      }
+
+      // 云端 Grok 备选
+      if (appConfig.engineType === 'grok') {
+        if (!appConfig.apiKey) throw new Error('请先在设置中填写 xAI Grok 的 API Key');
+        const res = await fetch('https://api.x.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${appConfig.apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'grok-beta',
+            messages: [
+              { role: 'system', content: systemPrompt || 'You are an expert Christian copywriter.' },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7
+          })
+        });
+        const d = await res.json();
+        return d.choices[0].message.content;
+      }
+
+      // 云端 Gemini 备选
+      if (appConfig.engineType === 'gemini') {
+        if (!appConfig.apiKey) throw new Error('请先在设置中填写 Google Gemini 的 API Key');
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appConfig.apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: (systemPrompt ? systemPrompt + '\n\n' : '') + userPrompt }] }]
+          })
+        });
+        const d = await res.json();
+        return d.candidates[0].content.parts[0].text;
+      }
+
+      throw new Error('未支持的引擎类型');
+    }
+
+    async function checkEngineStatus() {
+      const dot = document.getElementById('engineStatusDot');
+      const text = document.getElementById('engineStatusText');
+
+      if (appConfig.engineType === 'ollama') {
+        try {
+          let res;
+          try {
+            res = await fetch('/api/ollama/ping');
+          } catch (_) {
+            res = await fetch(`${appConfig.ollamaUrl}/api/tags`);
+          }
+          if (res.ok) {
+            dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50';
+            text.innerText = 'Meta Llama 3.1:8b (本地RTX 5060 ~3s)';
+            return;
+          }
+        } catch (_) {}
+
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse';
+        text.innerText = 'Ollama 待命中 (建议运行 启动工作台.bat)';
+      } else {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-indigo-400';
+        text.innerText = `云端模式: ${appConfig.engineType.toUpperCase()}`;
+      }
+    }
+
+    function loadSavedConfig() {
+      const saved = localStorage.getItem('gospelflow_v2_config');
+      if (saved) {
+        try {
+          appConfig = Object.assign(appConfig, JSON.parse(saved));
+        } catch (_) {}
+      }
+      document.getElementById('engineTypeSelect').value = appConfig.engineType || 'ollama';
+      document.getElementById('ollamaUrlInput').value = appConfig.ollamaUrl || 'http://localhost:11434';
+      document.getElementById('apiKeyInput').value = appConfig.apiKey || '';
+    }
+
+    function saveSettings() {
+      appConfig.engineType = document.getElementById('engineTypeSelect').value;
+      appConfig.ollamaUrl = document.getElementById('ollamaUrlInput').value.trim();
+      appConfig.apiKey = document.getElementById('apiKeyInput').value.trim();
+
+      localStorage.setItem('gospelflow_v2_config', JSON.stringify(appConfig));
+      closeModal('settingsModal');
+      checkEngineStatus();
+      showToast('设置已保存！');
+    }
+  </script>
+</body>
+</html>

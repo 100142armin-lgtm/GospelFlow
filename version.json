@@ -1,0 +1,6 @@
+{
+  "version": "1.1.0",
+  "release_notes": "1. 支持生成 15 与 20 篇矩阵；2. 智能日期自动排期校准；3. 鲁棒型 JSON 容错解析；4. 紧凑高质感操作工具栏；5. Mac / Windows 双平台启动器；6. 内置一键在线热更新。",
+  "updated_at": "2026-10-05",
+  "download_url": "https://raw.githubusercontent.com/100142armin-lgtm/GospelFlow/main/index.html"
+}
